@@ -36,30 +36,34 @@ import { User } from './users/entities/user.entity';
           configService.get<string>('DATABASE_URL') ||
           configService.get<string>('DATABASE_PUBLIC_URL');
 
+        const isProduction =
+          configService.get<string>('NODE_ENV') === 'production';
+
         // DATABASE_URL이 있으면 직접 사용, 없으면 개별 변수 사용
         if (databaseUrl) {
+          console.log('Using DATABASE_URL for connection');
           return {
             type: 'postgres',
             url: databaseUrl,
             entities: [Item, Inventory, Inbound, Outbound, Warehouse, User],
-            synchronize: configService.get<string>('NODE_ENV') !== 'production',
-            logging: configService.get<string>('NODE_ENV') !== 'production',
-            ssl:
-              configService.get<string>('NODE_ENV') === 'production'
-                ? { rejectUnauthorized: false }
-                : false,
+            synchronize: !isProduction,
+            logging: !isProduction,
+            ssl: isProduction ? { rejectUnauthorized: false } : false,
+            retryAttempts: 3,
+            retryDelay: 3000,
           };
         }
 
         // Railway의 PG* 환경 변수 또는 로컬 개발용 DB_* 변수 사용
-        return {
-          type: 'postgres',
+        const dbConfig = {
+          type: 'postgres' as const,
           host:
             configService.get<string>('PGHOST') ||
             configService.get<string>('DB_HOST', 'localhost'),
           port:
-            configService.get<number>('PGPORT') ||
-            configService.get<number>('DB_PORT', 5432),
+            Number(configService.get<string>('PGPORT')) ||
+            Number(configService.get<string>('DB_PORT')) ||
+            5432,
           username:
             configService.get<string>('PGUSER') ||
             configService.get<string>('DB_USERNAME', 'postgres'),
@@ -70,13 +74,21 @@ import { User } from './users/entities/user.entity';
             configService.get<string>('PGDATABASE') ||
             configService.get<string>('DB_DATABASE', 'inventory_db'),
           entities: [Item, Inventory, Inbound, Outbound, Warehouse, User],
-          synchronize: configService.get<string>('NODE_ENV') !== 'production',
-          logging: configService.get<string>('NODE_ENV') !== 'production',
-          ssl:
-            configService.get<string>('NODE_ENV') === 'production'
-              ? { rejectUnauthorized: false }
-              : false,
+          synchronize: !isProduction,
+          logging: !isProduction,
+          ssl: isProduction ? { rejectUnauthorized: false } : false,
+          retryAttempts: 3,
+          retryDelay: 3000,
         };
+
+        console.log('Using individual DB config:', {
+          host: dbConfig.host,
+          port: dbConfig.port,
+          database: dbConfig.database,
+          username: dbConfig.username,
+        });
+
+        return dbConfig;
       },
       inject: [ConfigService],
     }),
