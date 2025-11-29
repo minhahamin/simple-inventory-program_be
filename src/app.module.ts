@@ -24,19 +24,54 @@ import { User } from './users/entities/user.entity';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('DB_HOST', 'localhost'),
-        port: configService.get<number>('DB_PORT', 5432),
-        username: configService.get('DB_USERNAME', 'postgres'),
-        password: configService.get('DB_PASSWORD', 'postgres'),
-        database: configService.get('DB_DATABASE', 'inventory_db'),
-        entities: [Item, Inventory, Inbound, Outbound, Warehouse, User],
-        synchronize:
-          configService.get<string>('NODE_ENV') !== 'production', // 개발 환경: true (자동 테이블 생성), 프로덕션: false (마이그레이션 사용)
-        logging:
-          configService.get<string>('NODE_ENV') !== 'production',
-      }),
+      useFactory: (configService: ConfigService) => {
+        // Railway는 DATABASE_URL 또는 DATABASE_PUBLIC_URL을 제공
+        const databaseUrl =
+          configService.get<string>('DATABASE_URL') ||
+          configService.get<string>('DATABASE_PUBLIC_URL');
+
+        // DATABASE_URL이 있으면 직접 사용, 없으면 개별 변수 사용
+        if (databaseUrl) {
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            entities: [Item, Inventory, Inbound, Outbound, Warehouse, User],
+            synchronize: configService.get<string>('NODE_ENV') !== 'production',
+            logging: configService.get<string>('NODE_ENV') !== 'production',
+            ssl:
+              configService.get<string>('NODE_ENV') === 'production'
+                ? { rejectUnauthorized: false }
+                : false,
+          };
+        }
+
+        // Railway의 PG* 환경 변수 또는 로컬 개발용 DB_* 변수 사용
+        return {
+          type: 'postgres',
+          host:
+            configService.get<string>('PGHOST') ||
+            configService.get<string>('DB_HOST', 'localhost'),
+          port:
+            configService.get<number>('PGPORT') ||
+            configService.get<number>('DB_PORT', 5432),
+          username:
+            configService.get<string>('PGUSER') ||
+            configService.get<string>('DB_USERNAME', 'postgres'),
+          password:
+            configService.get<string>('PGPASSWORD') ||
+            configService.get<string>('DB_PASSWORD', 'postgres'),
+          database:
+            configService.get<string>('PGDATABASE') ||
+            configService.get<string>('DB_DATABASE', 'inventory_db'),
+          entities: [Item, Inventory, Inbound, Outbound, Warehouse, User],
+          synchronize: configService.get<string>('NODE_ENV') !== 'production',
+          logging: configService.get<string>('NODE_ENV') !== 'production',
+          ssl:
+            configService.get<string>('NODE_ENV') === 'production'
+              ? { rejectUnauthorized: false }
+              : false,
+        };
+      },
       inject: [ConfigService],
     }),
     ItemsModule,
