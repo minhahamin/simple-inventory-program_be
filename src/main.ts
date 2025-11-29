@@ -16,22 +16,31 @@ async function bootstrap() {
     app.setGlobalPrefix('api'); // 모든 라우트에 /api prefix 추가
 
     // CORS 설정
-    const allowedOrigins = configService
-      .get<string>('CORS_ORIGIN', 'http://localhost:3000')
-      .split(',');
-    app.enableCors({
-      origin: allowedOrigins,
-      credentials: true,
-    });
+    const corsOrigin = configService.get<string>('CORS_ORIGIN');
+    if (corsOrigin) {
+      const allowedOrigins = corsOrigin.split(',');
+      app.enableCors({
+        origin: allowedOrigins,
+        credentials: true,
+      });
+    } else {
+      // CORS_ORIGIN이 설정되지 않은 경우 모든 origin 허용 (프로덕션에서는 권장하지 않음)
+      app.enableCors({
+        origin: true,
+        credentials: true,
+      });
+    }
 
     // Railway는 PORT를 문자열로 제공할 수 있으므로 숫자로 변환
+    // process.env.PORT를 우선적으로 사용 (Railway가 자동 설정)
     const port =
-      Number(configService.get<string>('PORT')) ||
       Number(process.env.PORT) ||
+      Number(configService.get<string>('PORT')) ||
       3001;
 
     await app.listen(port, '0.0.0.0');
     console.log(`Application is running on: http://0.0.0.0:${port}`);
+    console.log(`PORT from env: ${process.env.PORT}`);
     console.log(
       `Environment: ${configService.get<string>('NODE_ENV', 'development')}`,
     );
