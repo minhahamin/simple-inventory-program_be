@@ -23,8 +23,8 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const port = configService.get<number>('PORT', 3001);
-  await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
+  const port = configService.get<number>('PORT') || process.env.PORT || 3001;
+  await app.listen(port, '0.0.0.0');
+  console.log(`Application is running on: http://0.0.0.0:${port}`);
 }
 bootstrap();
