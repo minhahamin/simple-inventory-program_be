@@ -8,6 +8,7 @@ import { InboundModule } from './inbound/inbound.module';
 import { OutboundModule } from './outbound/outbound.module';
 import { WarehouseModule } from './warehouse/warehouse.module';
 import { UsersModule } from './users/users.module';
+import { InboundOutboundModule } from './inbound-outbound/inbound-outbound.module';
 import { Item } from './items/entities/item.entity';
 import { Inventory } from './inventory/entities/inventory.entity';
 import { Inbound } from './inbound/entities/inbound.entity';
@@ -41,6 +42,7 @@ import { User } from './users/entities/user.entity';
     OutboundModule,
     WarehouseModule,
     UsersModule,
+    InboundOutboundModule,
   ],
   controllers: [AppController],
   providers: [AppService],
