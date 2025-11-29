@@ -32,8 +32,10 @@ import { User } from './users/entities/user.entity';
         password: configService.get('DB_PASSWORD', 'postgres'),
         database: configService.get('DB_DATABASE', 'inventory_db'),
         entities: [Item, Inventory, Inbound, Outbound, Warehouse, User],
-        synchronize: true, // 개발 환경: true (자동 테이블 생성), 프로덕션: false (마이그레이션 사용)
-        logging: true,
+        synchronize:
+          configService.get<string>('NODE_ENV') !== 'production', // 개발 환경: true (자동 테이블 생성), 프로덕션: false (마이그레이션 사용)
+        logging:
+          configService.get<string>('NODE_ENV') !== 'production',
       }),
       inject: [ConfigService],
     }),
