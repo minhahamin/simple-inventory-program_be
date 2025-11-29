@@ -1,6 +1,12 @@
+import * as crypto from 'crypto';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
+
+// TypeORM이 crypto를 사용할 수 있도록 전역 설정
+if (typeof global.crypto === 'undefined') {
+  global.crypto = crypto as any;
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
