@@ -48,4 +48,3 @@ export class InboundOutboundController {
     return this.inboundOutboundService.getTopItems(limitNum);
   }
 }
-

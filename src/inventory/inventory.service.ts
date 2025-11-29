@@ -75,10 +75,7 @@ export class InventoryService {
   }
 
   // 기존 메서드 (내부 사용)
-  async update(
-    id: string,
-    updateData: Partial<Inventory>,
-  ): Promise<Inventory> {
+  async update(id: string, updateData: Partial<Inventory>): Promise<Inventory> {
     const inventory = await this.inventoryRepository.findOne({
       where: { id },
     });

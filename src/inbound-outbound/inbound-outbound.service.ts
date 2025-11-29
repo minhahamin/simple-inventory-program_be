@@ -135,7 +135,8 @@ export class InboundOutboundService {
       }
       const status = statusMap.get(outbound.itemCode);
       status.totalOutbound += outbound.quantity;
-      status.totalOutboundAmount += outbound.quantity * Number(outbound.unitPrice);
+      status.totalOutboundAmount +=
+        outbound.quantity * Number(outbound.unitPrice);
       status.outboundCount += 1;
       if (
         !status.lastOutboundDate ||
@@ -280,4 +281,3 @@ export class InboundOutboundService {
     };
   }
 }
-

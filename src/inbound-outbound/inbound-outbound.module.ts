@@ -11,4 +11,3 @@ import { Outbound } from '../outbound/entities/outbound.entity';
   providers: [InboundOutboundService],
 })
 export class InboundOutboundModule {}
-

@@ -66,7 +66,10 @@ export class InboundService {
     return inbound;
   }
 
-  async update(id: string, updateInboundDto: UpdateInboundDto): Promise<Inbound> {
+  async update(
+    id: string,
+    updateInboundDto: UpdateInboundDto,
+  ): Promise<Inbound> {
     const oldInbound = await this.inboundRepository.findOne({ where: { id } });
     if (!oldInbound) {
       throw new NotFoundException(`Inbound with ID ${id} not found`);
