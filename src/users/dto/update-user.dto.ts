@@ -7,4 +7,3 @@ export class UpdateUserDto {
   status?: string;
   description?: string;
 }
-

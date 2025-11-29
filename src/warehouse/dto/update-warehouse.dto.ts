@@ -8,4 +8,3 @@ export class UpdateWarehouseDto {
   phone?: string;
   description?: string;
 }
-

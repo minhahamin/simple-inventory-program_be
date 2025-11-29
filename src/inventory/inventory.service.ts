@@ -1,13 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Inventory } from './entities/inventory.entity';
+import { CreateInventoryDto } from './dto/create-inventory.dto';
+import { UpdateInventoryDto } from './dto/update-inventory.dto';
 
 @Injectable()
 export class InventoryService {
-  private inventories: Inventory[] = [];
+  constructor(
+    @InjectRepository(Inventory)
+    private readonly inventoryRepository: Repository<Inventory>,
+  ) {}
 
-  create(itemCode: string, itemName: string, unit: string): Inventory {
-    const inventory: Inventory = {
-      id: (this.inventories.length + 1).toString(),
+  // 기존 메서드 (Items에서 사용)
+  async create(
+    itemCode: string,
+    itemName: string,
+    unit: string,
+  ): Promise<Inventory> {
+    const inventory = this.inventoryRepository.create({
       itemCode,
       itemName,
       currentStock: 0,
@@ -16,42 +27,93 @@ export class InventoryService {
       location: 'A-1-1',
       status: '정상',
       registeredDate: new Date().toISOString().split('T')[0],
-    };
+      lastInboundDate: null,
+      lastOutboundDate: null,
+    });
 
-    this.inventories.push(inventory);
+    return await this.inventoryRepository.save(inventory);
+  }
+
+  // DTO를 사용하는 새로운 create 메서드
+  async createFromDto(
+    createInventoryDto: CreateInventoryDto,
+  ): Promise<Inventory> {
+    const inventory = this.inventoryRepository.create({
+      itemCode: createInventoryDto.itemCode,
+      itemName: createInventoryDto.itemName,
+      currentStock: createInventoryDto.currentStock || 0,
+      safeStock: createInventoryDto.safeStock || 10,
+      unit: createInventoryDto.unit,
+      location: createInventoryDto.location || 'A-1-1',
+      status: createInventoryDto.status || '정상',
+      registeredDate: new Date().toISOString().split('T')[0],
+      lastInboundDate: null,
+      lastOutboundDate: null,
+    });
+
+    return await this.inventoryRepository.save(inventory);
+  }
+
+  async findAll(): Promise<Inventory[]> {
+    return await this.inventoryRepository.find();
+  }
+
+  async findOne(id: string): Promise<Inventory> {
+    const inventory = await this.inventoryRepository.findOne({
+      where: { id },
+    });
+    if (!inventory) {
+      throw new NotFoundException(`Inventory with ID ${id} not found`);
+    }
     return inventory;
   }
 
-  findAll(): Inventory[] {
-    return this.inventories;
+  async findByItemCode(itemCode: string): Promise<Inventory> {
+    return await this.inventoryRepository.findOne({
+      where: { itemCode },
+    });
   }
 
-  findOne(id: string): Inventory {
-    return this.inventories.find((inv) => inv.id === id);
-  }
-
-  findByItemCode(itemCode: string): Inventory {
-    return this.inventories.find((inv) => inv.itemCode === itemCode);
-  }
-
-  update(id: string, updateData: Partial<Inventory>): Inventory {
-    const index = this.inventories.findIndex((inv) => inv.id === id);
-    if (index === -1) {
+  // 기존 메서드 (내부 사용)
+  async update(
+    id: string,
+    updateData: Partial<Inventory>,
+  ): Promise<Inventory> {
+    const inventory = await this.inventoryRepository.findOne({
+      where: { id },
+    });
+    if (!inventory) {
       return null;
     }
 
-    this.inventories[index] = { ...this.inventories[index], ...updateData };
-    return this.inventories[index];
+    Object.assign(inventory, updateData);
+    return await this.inventoryRepository.save(inventory);
   }
 
-  remove(id: string): boolean {
-    const index = this.inventories.findIndex((inv) => inv.id === id);
-    if (index === -1) {
-      return false;
+  // DTO를 사용하는 새로운 update 메서드
+  async updateFromDto(
+    id: string,
+    updateInventoryDto: UpdateInventoryDto,
+  ): Promise<Inventory> {
+    const inventory = await this.inventoryRepository.findOne({
+      where: { id },
+    });
+    if (!inventory) {
+      throw new NotFoundException(`Inventory with ID ${id} not found`);
     }
 
-    this.inventories.splice(index, 1);
-    return true;
+    Object.assign(inventory, updateInventoryDto);
+    return await this.inventoryRepository.save(inventory);
+  }
+
+  async remove(id: string): Promise<void> {
+    const inventory = await this.inventoryRepository.findOne({
+      where: { id },
+    });
+    if (!inventory) {
+      throw new NotFoundException(`Inventory with ID ${id} not found`);
+    }
+
+    await this.inventoryRepository.remove(inventory);
   }
 }
-

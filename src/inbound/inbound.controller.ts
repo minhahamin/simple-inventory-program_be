@@ -40,4 +40,3 @@ export class InboundController {
     return this.inboundService.remove(id);
   }
 }
-

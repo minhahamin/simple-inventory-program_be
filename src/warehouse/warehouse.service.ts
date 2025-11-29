@@ -1,58 +1,96 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
 import { Warehouse } from './entities/warehouse.entity';
 
 @Injectable()
 export class WarehouseService {
-  private warehouses: Warehouse[] = [];
+  constructor(
+    @InjectRepository(Warehouse)
+    private readonly warehouseRepository: Repository<Warehouse>,
+  ) {}
 
-  create(createWarehouseDto: CreateWarehouseDto): Warehouse {
-    const warehouse: Warehouse = {
-      id: (this.warehouses.length + 1).toString(),
+  async create(createWarehouseDto: CreateWarehouseDto): Promise<Warehouse> {
+    // warehouseCode가 없거나 빈 문자열이면 자동 생성 (WH001 형식)
+    let warehouseCode = createWarehouseDto.warehouseCode;
+    if (!warehouseCode || warehouseCode.trim() === '') {
+      // 기존 warehouseCode 중 가장 큰 번호 찾기
+      const existingWarehouses = await this.warehouseRepository.find({
+        where: {},
+      });
+      const existingCodes = existingWarehouses
+        .map((warehouse) => warehouse.warehouseCode)
+        .filter((code) => code && code.startsWith('WH'))
+        .map((code) => {
+          const match = code.match(/WH(\d+)/);
+          return match ? parseInt(match[1], 10) : 0;
+        });
+
+      const maxNumber =
+        existingCodes.length > 0 ? Math.max(...existingCodes) : 0;
+      const nextNumber = maxNumber + 1;
+      warehouseCode = `WH${String(nextNumber).padStart(3, '0')}`;
+    }
+
+    const warehouse = this.warehouseRepository.create({
+      warehouseCode, // 자동 생성된 warehouseCode를 먼저 설정
+      warehouseName: createWarehouseDto.warehouseName,
+      location: createWarehouseDto.location,
+      capacity: createWarehouseDto.capacity ?? 0, // capacity가 없으면 0으로 설정
       currentStock: createWarehouseDto.currentStock || 0,
+      manager: createWarehouseDto.manager,
+      phone: createWarehouseDto.phone,
       description: createWarehouseDto.description || '',
-      ...createWarehouseDto,
-    };
+    });
 
-    this.warehouses.push(warehouse);
-    return warehouse;
+    return await this.warehouseRepository.save(warehouse);
   }
 
-  findAll(): Warehouse[] {
-    return this.warehouses;
+  async findAll(): Promise<Warehouse[]> {
+    return await this.warehouseRepository.find();
   }
 
-  findOne(id: string): Warehouse {
-    const warehouse = this.warehouses.find((warehouse) => warehouse.id === id);
+  async findOne(id: string): Promise<Warehouse> {
+    const warehouse = await this.warehouseRepository.findOne({
+      where: { id },
+    });
     if (!warehouse) {
       throw new NotFoundException(`Warehouse with ID ${id} not found`);
     }
     return warehouse;
   }
 
-  findByWarehouseCode(warehouseCode: string): Warehouse {
-    return this.warehouses.find((warehouse) => warehouse.warehouseCode === warehouseCode);
+  async findByWarehouseCode(warehouseCode: string): Promise<Warehouse> {
+    return await this.warehouseRepository.findOne({
+      where: { warehouseCode },
+    });
   }
 
-  update(id: string, updateWarehouseDto: UpdateWarehouseDto): Warehouse {
-    const index = this.warehouses.findIndex((warehouse) => warehouse.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Warehouse with ID ${id} not found`);
-    }
-
-    this.warehouses[index] = { ...this.warehouses[index], ...updateWarehouseDto };
-    return this.warehouses[index];
-  }
-
-  remove(id: string): void {
-    const warehouse = this.warehouses.find((warehouse) => warehouse.id === id);
+  async update(
+    id: string,
+    updateWarehouseDto: UpdateWarehouseDto,
+  ): Promise<Warehouse> {
+    const warehouse = await this.warehouseRepository.findOne({
+      where: { id },
+    });
     if (!warehouse) {
       throw new NotFoundException(`Warehouse with ID ${id} not found`);
     }
 
-    const index = this.warehouses.findIndex((warehouse) => warehouse.id === id);
-    this.warehouses.splice(index, 1);
+    Object.assign(warehouse, updateWarehouseDto);
+    return await this.warehouseRepository.save(warehouse);
+  }
+
+  async remove(id: string): Promise<void> {
+    const warehouse = await this.warehouseRepository.findOne({
+      where: { id },
+    });
+    if (!warehouse) {
+      throw new NotFoundException(`Warehouse with ID ${id} not found`);
+    }
+
+    await this.warehouseRepository.remove(warehouse);
   }
 }
-

@@ -31,7 +31,10 @@ export class WarehouseController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateWarehouseDto: UpdateWarehouseDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateWarehouseDto: UpdateWarehouseDto,
+  ) {
     return this.warehouseService.update(id, updateWarehouseDto);
   }
 
@@ -40,4 +43,3 @@ export class WarehouseController {
     return this.warehouseService.remove(id);
   }
 }
-

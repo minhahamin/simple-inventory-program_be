@@ -1,5 +1,4 @@
 export class CreateInboundDto {
-  inboundDate?: string;
   itemCode: string;
   itemName: string;
   quantity: number;
@@ -7,4 +6,3 @@ export class CreateInboundDto {
   supplier: string;
   memo?: string;
 }
-

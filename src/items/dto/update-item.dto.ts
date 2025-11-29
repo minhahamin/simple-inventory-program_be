@@ -6,4 +6,3 @@ export class UpdateItemDto {
   category?: string;
   description?: string;
 }
-

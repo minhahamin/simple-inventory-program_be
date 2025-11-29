@@ -31,7 +31,10 @@ export class OutboundController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOutboundDto: UpdateOutboundDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateOutboundDto: UpdateOutboundDto,
+  ) {
     return this.outboundService.update(id, updateOutboundDto);
   }
 
@@ -40,4 +43,3 @@ export class OutboundController {
     return this.outboundService.remove(id);
   }
 }
-

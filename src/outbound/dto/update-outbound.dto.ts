@@ -7,4 +7,3 @@ export class UpdateOutboundDto {
   customer?: string;
   memo?: string;
 }
-

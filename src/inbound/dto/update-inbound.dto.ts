@@ -7,4 +7,3 @@ export class UpdateInboundDto {
   supplier?: string;
   memo?: string;
 }
-

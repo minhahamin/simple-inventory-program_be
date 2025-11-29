@@ -7,4 +7,3 @@ export class CreateUserDto {
   status?: string;
   description?: string;
 }
-

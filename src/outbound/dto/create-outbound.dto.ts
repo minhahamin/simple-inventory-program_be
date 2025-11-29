@@ -1,5 +1,4 @@
 export class CreateOutboundDto {
-  outboundDate?: string;
   itemCode: string;
   itemName: string;
   quantity: number;
@@ -7,4 +6,3 @@ export class CreateOutboundDto {
   customer: string;
   memo?: string;
 }
-

@@ -1,5 +1,5 @@
 export class CreateWarehouseDto {
-  warehouseCode: string;
+  warehouseCode?: string; // 선택사항, 없으면 자동 생성
   warehouseName: string;
   location: string;
   capacity: number;
@@ -8,4 +8,3 @@ export class CreateWarehouseDto {
   phone: string;
   description?: string;
 }
-
