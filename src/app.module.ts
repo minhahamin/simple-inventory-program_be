@@ -94,6 +94,7 @@ import { User } from './users/entities/user.entity';
           database: dbConfig.database,
           username: dbConfig.username,
         });
+        console.log(`Synchronize: ${synchronize}`);
 
         return dbConfig;
       },
