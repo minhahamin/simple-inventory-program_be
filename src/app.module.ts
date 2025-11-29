@@ -39,14 +39,21 @@ import { User } from './users/entities/user.entity';
         const isProduction =
           configService.get<string>('NODE_ENV') === 'production';
 
+        // SYNCHRONIZE 환경 변수로 제어 (기본값: 프로덕션에서는 false, 개발에서는 true)
+        const synchronize =
+          configService.get<string>('SYNCHRONIZE') === 'true' ||
+          (!isProduction &&
+            configService.get<string>('SYNCHRONIZE') !== 'false');
+
         // DATABASE_URL이 있으면 직접 사용, 없으면 개별 변수 사용
         if (databaseUrl) {
           console.log('Using DATABASE_URL for connection');
+          console.log(`Synchronize: ${synchronize}`);
           return {
             type: 'postgres',
             url: databaseUrl,
             entities: [Item, Inventory, Inbound, Outbound, Warehouse, User],
-            synchronize: !isProduction,
+            synchronize,
             logging: !isProduction,
             ssl: isProduction ? { rejectUnauthorized: false } : false,
             retryAttempts: 3,
@@ -74,7 +81,7 @@ import { User } from './users/entities/user.entity';
             configService.get<string>('PGDATABASE') ||
             configService.get<string>('DB_DATABASE', 'inventory_db'),
           entities: [Item, Inventory, Inbound, Outbound, Warehouse, User],
-          synchronize: !isProduction,
+          synchronize,
           logging: !isProduction,
           ssl: isProduction ? { rejectUnauthorized: false } : false,
           retryAttempts: 3,
