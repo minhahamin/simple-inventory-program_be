@@ -1,3 +1,9 @@
+// TypeORM이 crypto를 사용할 수 있도록 가장 먼저 설정
+import * as crypto from 'crypto';
+if (typeof global.crypto === 'undefined') {
+  global.crypto = crypto as any;
+}
+
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
